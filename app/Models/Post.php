@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
+
+
 class Post extends Model
 {
+    
     use HasFactory;
     protected $fillable = ['title', 'slug', 'thumbnail','body','active','published_at', 'user_id', 'meta_title', 'meta_description'];
 
@@ -46,5 +50,17 @@ class Post extends Model
             return $this->thumbnail;
         }
         return '/storage/' . $this->thumbnail;
+    }
+    //show the read time
+    public function getReadTime(): Attribute{
+        return new Attribute(
+            get: function($value, $attributes){
+                $words=Str::wordCount(strip_tags($attributes['body']));
+                $minutes=ceil($words/200);
+
+                return $minutes. ''.str('min')->plural($minutes). ', '
+                .$words. ''.str('word')->plural($words);
+            }
+        );
     }
 }

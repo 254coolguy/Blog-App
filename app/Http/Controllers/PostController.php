@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Post;
 use App\Models\Category;
+use App\Models\postview;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -52,7 +53,7 @@ class PostController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Post $post)
+    public function show(Post $post, Request $request)
     {
          // //Check if post is active  before publish
         if(!$post->active){
@@ -75,6 +76,14 @@ class PostController extends Controller
         ->orderBy('published_at', 'asc')
         ->limit(1)
         ->first();
+
+        $user= $request->user();
+        postview::create([
+            'ip_adress' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'post_id' => $post->id,
+            'user_id' => $user?->id,
+        ]);
 
         return view('post.show', compact('post', 'prev', 'next'));
 
