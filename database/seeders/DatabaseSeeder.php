@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
 
         // $adminUser->assignRole($adminRole);
 
-       \App\Models\User::factory(10)->create();
+       \App\Models\Post::factory(20)->create();
 
 
         // \App\Models\User::factory()->create([

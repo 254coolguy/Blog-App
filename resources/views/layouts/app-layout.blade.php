@@ -72,11 +72,11 @@
                 <div :class="open ? 'block': 'hidden'" class="w-full flex-grow sm:flex sm:items-center sm:w-auto">
                     <div class="w-full container mx-auto flex flex-col sm:flex-row items-center justify-between text-sm font-bold uppercase mt-0 px-6 py-2">
                         <div class="flex flex-col sm:flex-row items-center"> <!-- Wrap the nav links in a flex container -->
-                            <a href="/" class="bg-black text-white rounded py-2 px-4 mx-2 flex items-center justify-center sm:justify-start">Home</a>
+                            <a href="/" class="bg-black text-white rounded py-2 px-4 mx-2 flex flex-row items-center  sm:justify-start">Home</a>
                             @foreach ($categories as $index => $category)
                                 <a href="{{ route('by-category', $category) }}" class="rounded py-2 px-4 mx-2 {{ optional(request('category'))->slug ==  $category->slug ? 'bg-blue-600 text-white' : ''}} 
                                 @if(request('category') == null) hover-effect @endif
-                                @if ($index > 0) mt-2 @endif"> <!-- Add mt-2 to create space between the links -->
+                                @if ($index > 0)  @endif"> <!-- Add mt-2 to create space between the links -->
                                     {{ $category->title }}
                                 </a>
                             @endforeach
@@ -143,7 +143,7 @@
     </footer>
 
 
-  @livewireStyles
+  @livewireScripts
 
 </body>
 

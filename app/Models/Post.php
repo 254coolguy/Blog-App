@@ -33,7 +33,7 @@ class Post extends Model
         return $this->BelongsToMany(related: Category::class);
     }
     //shortbody function
-    public function shortBody(): string
+    public function shortBody($words = 30): string
     {
         return Str::words(strip_tags($this->body), words:30);
     }

@@ -17,21 +17,84 @@ class PostController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
+    public function home(): View
     {
-        //retriving from database correct eloquent method
-        $posts = Post::where('active', '=', '1')
+        // latest Post
+        $latestPost = Post::query()
+            ->where('active', '=', '1')
+            ->whereDate('published_at', '<', Carbon::now())
             ->orderBy('published_at', 'desc')
-            ->paginate(4);
-        return view('home', ['posts' => $posts]);
+            ->limit(1)
+            ->first();
+        //show most popular five posts based on upvotes
+        $popularPosts = Post::query()
+            ->leftJoin('upvote_downvotes', 'posts.id', '=', 'upvote_downvotes.post_id')
+            ->select('posts.*', DB::raw('COUNT(upvote_downvotes.id) as upvote_count'))
+            ->where(function ($query) {
+                $query->whereNull('upvote_downvotes.is_upvote')
+                    ->orWhere('upvote_downvotes.is_upvote', '=', 1);
+            })
+            ->where('active', '=', 1)
+            ->whereDate('published_at', '<', Carbon::now())
+            ->orderByDesc('upvote_count')
+            ->groupBy('posts.id')
+            ->limit(5)
+            ->get();
+
+
+        // If authorized - Show recommended posts based on user upvotes
+        $user = auth()->user();
+
+        if ($user) {
+            $leftJoin = "(SELECT cp.category_id, cp.post_id FROM upvote_downvotes
+                        JOIN category_post cp ON upvote_downvotes.post_id = cp.post_id
+                        WHERE upvote_downvotes.is_upvote = 1 and upvote_downvotes.user_id = ?) as t";
+            $recommendedPosts = Post::query()
+                ->leftJoin('category_post as cp', 'posts.id', '=', 'cp.post_id')
+                ->leftJoin(DB::raw($leftJoin), function ($join) {
+                    $join->on('t.category_id', '=', 'cp.category_id')
+                        ->on('t.post_id', '<>', 'cp.post_id');
+                })
+                ->select('posts.*')
+                ->where('posts.id', '<>', DB::raw('t.post_id'))
+                ->setBindings([$user->id])
+                ->limit(3)
+                ->get();
+        } // Not authorized - Popular posts based on views
+        else {
+            $recommendedPosts = Post::query()
+                ->leftJoin('postviews', 'posts.id', '=', 'postviews.post_id')
+                ->select('posts.*', DB::raw('COUNT(postviews.id) as view_count'))
+                ->where('active', '=', 1)
+                ->whereDate('published_at', '<', Carbon::now())
+                ->orderByDesc('view_count')
+                ->groupBy(['posts.id'])
+                ->limit(3)
+                ->get();
+        }
+        //show recent categories with their latest post 
+        $categories = Category::query()
+//            ->with(['posts' => function ($query) {
+//                $query->orderByDesc('published_at');
+//            }])
+            ->whereHas('posts', function ($query) {
+                $query
+                    ->where('active', '=', 1)
+                    ->whereDate('published_at', '<', Carbon::now());
+            })
+            ->select('categories.*')
+            ->selectRaw('MAX(posts.published_at) as max_date')
+            ->leftJoin('category_post', 'categories.id', '=', 'category_post.category_id')
+            ->leftJoin('posts', 'posts.id', '=', 'category_post.post_id')
+            ->orderByDesc('max_date')
+            ->groupBy(['categories.id'])
+            ->limit(5)
+            ->get();
+
+
         
-        // return view('home', ['posts' => $posts]);
-        // $posts= Post::queryb ()
-        // ->where('active', '=', '1')
-        // ->whereDate('published_at', '<', Carbon::now())
-        // ->orderBy('published_at', 'desc')
-        // ->paginate();
-        // return view('home', compact('posts'));
+        
+        return view('home', compact('latestPost', 'popularPosts', 'recommendedPosts', 'categories'));
     }
 
     /**
@@ -55,29 +118,29 @@ class PostController extends Controller
      */
     public function show(Post $post, Request $request)
     {
-         // //Check if post is active  before publish
-        if(!$post->active){
+        // //Check if post is active  before publish
+        if (!$post->active) {
             throw new NotFoundResourceException();
         }
         //IMPEMENTING NEXT
         $next = Post::query()
-        ->where('active', '=', 1)
-        //->whereDate('published_at', '<=', Carbon::now())
-        ->whereDate('published_at', '<', $post->published_at)
-        ->orderBy('published_at', 'desc')
-        ->limit(1)
-        ->first();
+            ->where('active', '=', 1)
+            //->whereDate('published_at', '<=', Carbon::now())
+            ->whereDate('published_at', '<', $post->published_at)
+            ->orderBy('published_at', 'desc')
+            ->limit(1)
+            ->first();
 
         //Implimenting Previous
         $prev = Post::query()
-        ->where('active', '=', 1)
-        //->whereDate('published_at', '<=', Carbon::now())
-        ->whereDate('published_at', '>', $post->published_at)
-        ->orderBy('published_at', 'asc')
-        ->limit(1)
-        ->first();
+            ->where('active', '=', 1)
+            //->whereDate('published_at', '<=', Carbon::now())
+            ->whereDate('published_at', '>', $post->published_at)
+            ->orderBy('published_at', 'asc')
+            ->limit(1)
+            ->first();
 
-        $user= $request->user();
+        $user = $request->user();
         postview::create([
             'ip_adress' => $request->ip(),
             'user_agent' => $request->userAgent(),
@@ -86,10 +149,10 @@ class PostController extends Controller
         ]);
 
         return view('post.show', compact('post', 'prev', 'next'));
-
     }
     //selecting by category
-    public function byCategory(Category $category){
+    public function byCategory(Category $category)
+    {
         $posts = Post::query()
             ->join('category_post', 'posts.id', '=', 'category_post.post_id')
             ->where('category_post.category_id', '=', $category->id)
@@ -98,9 +161,6 @@ class PostController extends Controller
             ->orderBy('published_at', 'desc')
             ->paginate(10);
 
-            return view('post.category', compact('posts', 'category'));
+        return view('post.category', compact('posts', 'category'));
     }
-
-    
-    
 }

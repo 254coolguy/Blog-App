@@ -32,7 +32,7 @@ Route::middleware('auth')->group(function () {
 require __DIR__.'/auth.php';
 
 
-Route::get('/', [PostController::class, 'index'])->name('home');
+Route::get('/', [PostController::class, 'home'])->name('home');
 //post by category
 Route::get('/category/{category:slug}', [PostController::class, 'byCategory'])->name('by-category');
 //about page 
