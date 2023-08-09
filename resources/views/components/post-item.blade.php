@@ -1,6 +1,6 @@
 @props(['post', 'showShadow' => true])
 
-<article class=" flex flex-col {{ $showShadow ? 'shadow' : '' }}shadow my-4">
+<article class=" flex w-full flex-col {{ $showShadow ? 'shadow' : '' }}shadow my-4">
   <!-- Article Image -->
   <a href="{{ route('view', $post) }}" class="hover:opacity-75">
     <img  class="aspect-[4/3] object-contain" src="{{ $post->getThumbnail() }}" alt="{{ $post->title }}" >

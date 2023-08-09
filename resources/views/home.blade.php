@@ -82,10 +82,10 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 @foreach ($categories as $category)
                 <div class="border border-gray-300 rounded p-4">
-                    <a href="{{ route('by-category', $category) }}"><h3 class="mb-3 font-bold text-center">{{ $category->title }}</h3></a>
+                    <a href="{{ route('by-category', $category) }}"><h3 class="mb-3 font-bold">{{ $category->title }}</h3></a>
                     
                     @foreach ($category->publishedPosts->take(1) as $post)
-                    <div class="mb-3">
+                    <div class="mb-3 justify-">
                         <x-post-item :post="$post" :show-author="false" :post="$post" :show-shadow="false" />
                     </div>
                     @endforeach
