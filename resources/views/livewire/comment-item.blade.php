@@ -8,18 +8,27 @@
         </div>
         <div class="">
             <div>
-                <a href="#" class="text-indigo-600 font-bold">John Smith</a>
+                <a href="#" class="text-indigo-600 font-bold">{{$comment->user->name}}</a>
                 <span class="text-gray-500">{{ $comment->created_at->diffForHumans() }}</span>
             </div>
+
+           @if ($editing)
+           <livewire:comment-create :comment-model="$comment"/>
+            
+               
+           @else
             <div class="text-black text-justify ">
-             {{ $comment->comment }}
+                {{ $comment->comment }}
             </div>
+               
+           @endif
+            
             <div class="mt-3">
                 <a href="#"class="text-sm text-indigo-600 mr-3">Reply</a>
                 {{-- if user is not the current owner of comment then not able to delete and edit but see commen --}}
                 @if (\Illuminate\Support\Facades\Auth::id() == $comment->user_id)
-                <a href="#"class="text-sm text-blue-900 mr-3 text-semibold font-semibold">Edit</a>
-                <a href="#"class="text-sm text-red-600 font-semibold">Delete</a>   
+                <a wire:click.prevent="startCommentEdit "href="#"class="text-sm text-blue-900 mr-3 text-semibold font-semibold">Edit</a>
+                <a wire:click.prevent="deleteComment" href="#"class="text-sm text-red-600 font-semibold">Delete</a>   
                 @endif
                 
             </div>

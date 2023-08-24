@@ -17,7 +17,8 @@ class Comments extends Component
 
     //event listener for when code is created
     protected $listeners =[
-        'commentCreated' => 'commentCreated'
+        'commentCreated' => 'commentCreated',
+        'commentDeleted' => 'commentDeleted'
     ];
 
     public function mount(Post $post)
@@ -41,5 +42,13 @@ class Comments extends Component
         $this->comments = $this->comments->prepend($comment);
         
 
+    }
+
+    public function commentDeleted(int $id)
+    {
+        $this->comments = $filtered = $this->comments->reject(function($comment) use ($id){
+            return $comment->id ==$id;
+
+        });
     }
 }
